@@ -1,0 +1,35 @@
+
+SQL;
+CREATE DATABASE bastan;
+USE bastan;
+CREATE TABLE bastan (
+ip VARCHAR(50), id INT)
+
+Bash;
+
+#!/bin/bash
+for f in *
+do
+        mysql -e "LOAD DATA INFILE '"/home/cloudera/huriye/test/$f"' into table bastan FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';" -u root --password=cloudera bastan
+done
+----------------------------------------------
+Sqoop;
+
+sqoop import --connect jdbc:mysql://localhost/bastan --username root --password cloudera --table bastan  --target-dir /tmp/bastan --as-parquetfile -m 1
+
+Hive ;
+
+create external table bastan (ip varchar(50) , id int)
+stored as parquet
+location '/tmp/bastan/'
+
+CREATE EXTERNAL TABLE default.bastanson (ip varchar(15))
+PARTITIONED BY (id INT)
+STORED AS PARQUET
+
+SET hive.exec.dynamic.partition = true;
+SET hive.exec.dynamic.partition.mode = nonstrict;
+
+INSERT INTO table default.bastanson partition(id) SELECT * FROM bastan limit 200
+
+describe formatted bastanson
